@@ -1,0 +1,33 @@
+name: update-release-branches
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fast-forward release branches
+        run: |
+          set -euo pipefail
+          git fetch origin main release/ubi8 release/ubi9 release/ubi10
+          for branch in release/ubi8 release/ubi9 release/ubi10; do
+            git checkout "$branch"
+            git merge --ff-only origin/main
+            git push origin "$branch"
+          done
